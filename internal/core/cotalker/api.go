@@ -10,7 +10,7 @@ type API struct {
 	client        *httpClient.Client
 	configuration *config.Configuration
 
-	// Servicio para propiedades (antes Collections)
+	// Servicio para propiedades
 	Properties PropertyService
 
 	// Servicio para tipos de propiedades
