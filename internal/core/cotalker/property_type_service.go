@@ -12,7 +12,6 @@ import (
 type PropertyTypeService interface {
 	Create(propertyType models.PropertyTypeCreate) (map[string]interface{}, error)
 	GetAll() ([]map[string]interface{}, error)
-	GetByCode(code string) (map[string]interface{}, error)
 }
 
 type propertyTypeService struct {
@@ -93,28 +92,4 @@ func (s *propertyTypeService) GetAll() ([]map[string]interface{}, error) {
 	}
 
 	return propertyTypes, nil
-}
-
-// GetByCode obtiene un tipo de propiedad por su código
-func (s *propertyTypeService) GetByCode(code string) (map[string]interface{}, error) {
-	path := fmt.Sprintf("/api/v2/propertytypes/%s", code)
-
-	responseBytes, err := s.client.Get(path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error al obtener tipo de propiedad %s: %w", code, err)
-	}
-
-	// Procesar la respuesta
-	var response map[string]interface{}
-	err = json.Unmarshal(responseBytes, &response)
-	if err != nil {
-		return nil, fmt.Errorf("error al deserializar la respuesta: %w", err)
-	}
-
-	// Extraer el objeto data de la respuesta
-	if data, ok := response["data"].(map[string]interface{}); ok {
-		return data, nil
-	}
-
-	return nil, fmt.Errorf("formato de respuesta inesperado al obtener tipo de propiedad %s", code)
 }
