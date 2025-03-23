@@ -16,13 +16,13 @@ import (
 func main() {
 	// Cargar variables de entorno desde el archivo .env local
 	if err := godotenv.Load(); err != nil {
-		log.Printf("Advertencia: No se pudo cargar el archivo .env: %v", err)
+		log.Printf("Error: No se pudo cargar el archivo .env: %v", err)
 	}
 
 	// Usar las variables de entorno existentes
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
-		baseURL = "https://staging.cotalker.com"
+		log.Fatal("Error: Se requiere una URL base (BASE_URL)")
 	}
 
 	accessToken := os.Getenv("COTALKER_TOKEN")
@@ -46,35 +46,24 @@ func main() {
 	schemaNodes := []models.SchemaNode{
 		{
 			Weight:    1,
-			Key:       "name",
-			Display:   "name",
+			Key:       "complete_name",
+			Display:   "complete_name",
 			BasicType: "string",
-			IsArray:   false,
-			IsActive:  true,
+			IsArray:   false, // default is false
+			IsActive:  true,  // default is true
 		},
 		{
 			Weight:    2,
-			Key:       "last_name",
-			Display:   "last_name",
-			BasicType: "string",
-			IsArray:   false,
-			IsActive:  true,
-		},
-		{
-			Weight:    3,
 			Key:       "salary",
 			Display:   "salary",
 			BasicType: "number",
-			IsArray:   false,
-			IsActive:  true,
 		},
 		{
-			Weight:    4,
-			Key:       "position",
-			Display:   "position",
+			Weight:    3,
+			Key:       "responsibilities",
+			Display:   "responsibilities",
 			BasicType: "string",
-			IsArray:   false,
-			IsActive:  true,
+			IsArray:   true,
 		},
 	}
 
@@ -92,10 +81,13 @@ func main() {
 			"display": fmt.Sprintf("emp_%d", randomNum),
 		},
 		"schemaInstance": map[string]interface{}{
-			"name":      "Juan",
-			"last_name": "Pérez",
-			"salary":    8000,
-			"position":  "Desarrollador",
+			"complete_name": "Juan Pérez",
+			"salary":        8000,
+			"responsibilities": []string{
+				"Desarrollar software",
+				"Mantener sistemas operativos",
+				"Realizar pruebas de software",
+			},
 		},
 	}
 
@@ -109,8 +101,13 @@ func main() {
 	// Esperar un momento para que la colección esté disponible
 	time.Sleep(2 * time.Second)
 
-	// Obtener empleados de la colección específica
-	items, err := client.GetProperty(collection, nil)
+	// Obtener empleados de la colección específica usando la ruta alternativa
+	params := map[string]string{
+		"propertyType": collection,
+		"pageSize":     "100",
+		"page":         "1",
+	}
+	items, err := client.GetProperty(collection, params)
 	if err != nil {
 		log.Fatalf("Error al obtener empleados: %v", err)
 	}
