@@ -30,58 +30,73 @@ func newPropertyService(client *http.Client) PropertyService {
 	}
 }
 
+// GetAll obtiene todas las propiedades del tipo especificado con los parámetros adicionales
+func (s *propertyService) GetAll(propertyType string, params map[string]string) ([]map[string]interface{}, error) {
+	if params == nil {
+		params = make(map[string]string)
+	}
+
+	// Usar la ruta correcta y los parámetros necesarios
+	path := "/api/v2/properties"
+	params["propertyTypes"] = propertyType
+	if params["limit"] == "" {
+		params["limit"] = "200"
+	}
+	if params["isActive"] == "" {
+		params["isActive"] = "true"
+	}
+
+	responseBytes, err := s.client.Get(path, params)
+	if err != nil {
+		return nil, fmt.Errorf("error al obtener propiedades del tipo %s: %w", propertyType, err)
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &response); err != nil {
+		return nil, fmt.Errorf("error al deserializar la respuesta: %w", err)
+	}
+
+	if data, ok := response["data"].(map[string]interface{}); ok {
+		if properties, ok := data["properties"].([]interface{}); ok {
+			result := make([]map[string]interface{}, 0, len(properties))
+			for _, property := range properties {
+				if propertyMap, ok := property.(map[string]interface{}); ok {
+					result = append(result, propertyMap)
+				}
+			}
+			return result, nil
+		}
+	}
+
+	return nil, fmt.Errorf("formato de respuesta inesperado al obtener propiedades")
+}
+
 // GetAllFromPropertyType obtiene todas las propiedades del tipo especificado
 func (s *propertyService) GetAllFromPropertyType(propertyType string) ([]map[string]interface{}, error) {
-	// Intentar primero con la ruta /api/v2/properties
+	// Usar la ruta correcta y los parámetros necesarios
 	path := "/api/v2/properties"
 	params := map[string]string{
-		"propertyType": propertyType,
+		"propertyTypes": propertyType,
+		"limit":         "200",
+		"isActive":      "true",
+		"count":         "true",
 	}
 
 	page := 1
-	pageSize := 100
 	allProperties := []map[string]interface{}{}
 
 	for {
-		// Agregar parámetros de paginación
 		params["page"] = strconv.Itoa(page)
-		params["pageSize"] = strconv.Itoa(pageSize)
-
 		responseBytes, err := s.client.Get(path, params)
 		if err != nil {
-			// Si hay un error, intentar con la ruta alternativa
-			alternativePath := fmt.Sprintf("/api/collections/%s", propertyType)
-			alternativeResponseBytes, alternativeErr := s.client.Get(alternativePath, nil)
-
-			if alternativeErr != nil {
-				return nil, fmt.Errorf("error al obtener propiedades del tipo %s: %w", propertyType, err)
-			}
-
-			// Procesar la respuesta alternativa
-			var alternativeResponse map[string]interface{}
-			if err := json.Unmarshal(alternativeResponseBytes, &alternativeResponse); err != nil {
-				return nil, fmt.Errorf("error al deserializar la respuesta alternativa: %w", err)
-			}
-
-			// Extraer las propiedades de la respuesta alternativa
-			if data, ok := alternativeResponse["data"].([]interface{}); ok {
-				for _, item := range data {
-					if itemMap, ok := item.(map[string]interface{}); ok {
-						allProperties = append(allProperties, itemMap)
-					}
-				}
-			}
-
-			break
+			return nil, fmt.Errorf("error al obtener propiedades del tipo %s: %w", propertyType, err)
 		}
 
-		// Procesar la respuesta
 		var response map[string]interface{}
 		if err := json.Unmarshal(responseBytes, &response); err != nil {
 			return nil, fmt.Errorf("error al deserializar la respuesta: %w", err)
 		}
 
-		// Extraer las propiedades y el conteo total
 		if data, ok := response["data"].(map[string]interface{}); ok {
 			if properties, ok := data["properties"].([]interface{}); ok {
 				for _, property := range properties {
@@ -94,9 +109,7 @@ func (s *propertyService) GetAllFromPropertyType(propertyType string) ([]map[str
 			// Verificar si hay más páginas
 			if count, ok := data["count"].(float64); ok {
 				totalItems := int(count)
-				totalPages := (totalItems + pageSize - 1) / pageSize
-
-				if page >= totalPages {
+				if len(allProperties) >= totalItems {
 					break
 				}
 			} else {
@@ -107,39 +120,6 @@ func (s *propertyService) GetAllFromPropertyType(propertyType string) ([]map[str
 		}
 
 		page++
-	}
-
-	return allProperties, nil
-}
-
-// GetAll obtiene todas las propiedades del tipo especificado con los parámetros adicionales
-func (s *propertyService) GetAll(propertyType string, params map[string]string) ([]map[string]interface{}, error) {
-	if params == nil {
-		params = make(map[string]string)
-	}
-	params["propertyType"] = propertyType
-
-	path := "/api/v2/properties"
-	responseBytes, err := s.client.Get(path, params)
-	if err != nil {
-		return nil, fmt.Errorf("error al obtener propiedades del tipo %s: %w", propertyType, err)
-	}
-
-	var response map[string]interface{}
-	if err := json.Unmarshal(responseBytes, &response); err != nil {
-		return nil, fmt.Errorf("error al deserializar la respuesta: %w", err)
-	}
-
-	allProperties := []map[string]interface{}{}
-
-	if data, ok := response["data"].(map[string]interface{}); ok {
-		if properties, ok := data["properties"].([]interface{}); ok {
-			for _, property := range properties {
-				if propertyMap, ok := property.(map[string]interface{}); ok {
-					allProperties = append(allProperties, propertyMap)
-				}
-			}
-		}
 	}
 
 	return allProperties, nil
