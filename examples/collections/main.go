@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/felipeinf/cotalker_sdk-go/internal/core/models"
 	"github.com/felipeinf/cotalker_sdk-go/pkg/cotalker"
+	"github.com/felipeinf/cotalker_sdk-go/pkg/models"
 	"github.com/joho/godotenv"
 )
 
