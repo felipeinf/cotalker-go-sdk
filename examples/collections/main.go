@@ -67,15 +67,15 @@ func main() {
 		},
 	}
 
-	// Crear el tipo de propiedad
-	_, err := client.CreatePropertyType(collection, collection, schemaNodes)
+	// Crear la colección
+	_, err := client.CreateCollection(collection, collection, schemaNodes)
 	if err != nil {
 		log.Fatalf("Error al crear la colección [%s]: %v", collection, err)
 	}
 	fmt.Printf("Colección [%s] creada exitosamente\n", collection)
 
 	// Definir los datos del empleado
-	itemData := map[string]interface{}{
+	element := map[string]interface{}{
 		"name": map[string]interface{}{
 			"code":    fmt.Sprintf("emp_%d", randomNum),
 			"display": fmt.Sprintf("emp_%d", randomNum),
@@ -92,7 +92,7 @@ func main() {
 	}
 
 	// Crear el empleado
-	_, err = client.CreatePropertyItem(collection, itemData)
+	_, err = client.CreateCollectionElement(collection, element)
 	if err != nil {
 		log.Fatalf("Error al crear empleado: %v", err)
 	}
@@ -101,13 +101,7 @@ func main() {
 	// Esperar un momento para que la colección esté disponible
 	time.Sleep(2 * time.Second)
 
-	// Obtener empleados de la colección específica usando la ruta alternativa
-	params := map[string]string{
-		"propertyType": collection,
-		"pageSize":     "100",
-		"page":         "1",
-	}
-	items, err := client.GetProperty(collection, params)
+	items, err := client.GetAllFromCollection(collection)
 	if err != nil {
 		log.Fatalf("Error al obtener empleados: %v", err)
 	}
