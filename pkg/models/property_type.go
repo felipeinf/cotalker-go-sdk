@@ -1,21 +1,31 @@
 package models
 
 type PropertyType struct {
-	ID       string `json:"_id"`
-	Company  string `json:"company"`
-	Code     string `json:"code"`
-	Display  string `json:"display"`
-	IsActive bool   `json:"isActive"`
-	SExtras  bool   `json:"sextras"`
-	Create   struct {
-		RequiredPermission []string `json:"requiredPermission"`
-	} `json:"create"`
-	ViewPermissions []string     `json:"viewPermissions"`
-	SchemaNodes     []SchemaNode `json:"schemaNodes"`
-	Visualization   struct {
-		SchemaNodesGroups []interface{} `json:"schemaNodesGroups"`
-	} `json:"visualization"`
-	PropertyImportPermissions []string `json:"propertyImportPermissions"`
-	CreatedAt                 string   `json:"createdAt"`
-	ModifiedAt                string   `json:"modifiedAt"`
+	ID              string                   `json:"_id"`
+	Code            string                   `json:"code"`
+	Company         string                   `json:"company"`
+	CreatedAt       string                   `json:"createdAt"`
+	IsActive        bool                     `json:"isActive"`
+	ModifiedAt      string                   `json:"modifiedAt"`
+	Display         string                   `json:"display"`
+	SchemaNodes     []PropertyTypeSchemaNode `json:"schemaNodes"`
+	ViewPermissions []string                 `json:"viewPermissions"`
+}
+
+type PropertyTypeSchemaNode struct {
+	Validators  PropertyTypeValidator `json:"validators"`
+	IsArray     bool                  `json:"isArray"`
+	Weight      int                   `json:"weight"`
+	IsActive    bool                  `json:"isActive"`
+	Key         string                `json:"key"`
+	Display     string                `json:"display"`
+	Description string                `json:"description"`
+	BasicType   string                `json:"basicType"` // 'string'|'number'|'boolean'|'COTProperty'|'COTUser'|'date'
+	SubType     string                `json:"subType"`
+}
+
+type PropertyTypeValidator struct {
+	Required bool `json:"required"`
+	Min      *int `json:"min,omitempty"`
+	Max      *int `json:"max,omitempty"`
 }
